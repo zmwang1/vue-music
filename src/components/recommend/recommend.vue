@@ -1,13 +1,13 @@
 <template>
   <div class="recommend">
-    <scroll class="recommend-content" :data="discList">
+    <scroll ref="scroll" class="recommend-content" :data="discList">
       <div>
         <div class="slider-wrapper" v-if="recommends.length">
           <div class="slider-content">
             <slider>
               <div v-for="item of recommends" :key="item.id">
                 <a :href="item.linkUrl">
-                  <img :src="item.picUrl" />
+                  <img class="needsclick" :src="item.picUrl" @load="loadImg" />
                 </a>
               </div>
             </slider>
@@ -18,7 +18,7 @@
           <ul>
             <li v-for="(item, i) of discList" :key="i" class="item">
               <div class="icon">
-                <img width="60" height="60" :src="item.imgurl" />
+                <img width="60" height="60" v-lazy="item.imgurl" />
               </div>
               <div class="text">
                 <h2 class="name" v-html="item.creator ? item.creator.name : ''"></h2>
@@ -28,6 +28,9 @@
           </ul>
         </div>
       </div>
+      <div class="loading-container" v-show="!discList.length">
+        <loading></loading>
+      </div>
     </scroll>
   </div>
 </template>
@@ -36,11 +39,13 @@ import Scroll from 'base/scroll/scroll'
 import { getRecommend, getDiscList } from 'api/recommend.js'
 import { ERR_OK } from 'api/config'
 import slider from 'base/slider/slider'
+import loading from 'base/loading/loading'
 export default {
   data() {
     return {
       recommends: [],
-      discList: []
+      discList: [],
+      checkedImg: false
     }
   },
   created() {
@@ -49,7 +54,8 @@ export default {
   },
   components: {
     slider,
-    Scroll
+    Scroll,
+    loading
   },
   methods: {
     _getRecommend() {
@@ -65,6 +71,12 @@ export default {
           this.discList = res.data.list
         }
       })
+    },
+    loadImg() {
+      if (!this.checkedImg) {
+        this.$refs.scroll.refresh()
+        this.checkedImg = true
+      }
     }
   }
 }
