@@ -119,9 +119,14 @@ export default {
         index
       })
     },
-    random() {},
+    random() {
+      this.randomPlay({
+        list: this.songs
+      })
+    },
     ...mapActions([
-      'selectPlay'
+      'selectPlay',
+      'randomPlay'
     ])
   }
 }
