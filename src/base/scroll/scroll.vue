@@ -17,7 +17,9 @@ export default {
     },
     data: {
       type: Array,
-      default: null
+      default: () => {
+        return []
+      }
     },
     listenScroll: {
       type: Boolean,
@@ -31,33 +33,28 @@ export default {
   },
   watch: {
     data () {
-      setTimeout(() => {
-        this.refresh()
-      }, 20)
+      this.refresh()
     }
   },
   methods: {
     _initScroll () {
-      if (!this.$refs.wrapper) {
-        return
-      }
-      this.scroll = new BScroll(this.$refs.wrapper, {
+      this.scroll = new BScroll(this.$refs['wrapper'], {
         probeType: this.probeType,
         click: this.click
       })
 
       if (this.listenScroll) {
-        var vm = this
-        this.scroll.on('scroll', (pos) => { // pos是位置
+        let vm = this
+        this.scroll.on('scroll', (pos) => {
           vm.$emit('scroll', pos)
         })
       }
     },
-    enable () {
-      this.scroll && this.scroll.enable()
-    },
     disable () {
       this.scroll && this.scroll.disable()
+    },
+    enable () {
+      this.scroll && this.scroll.enable()
     },
     refresh () {
       this.scroll && this.scroll.refresh()
@@ -71,3 +68,6 @@ export default {
   }
 }
 </script>
+<style scoped>
+
+</style>

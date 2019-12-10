@@ -1,16 +1,19 @@
 import 'babel-polyfill'
 import Vue from 'vue'
 import App from './App'
-import FastClick from 'fastclick'
 import router from './router'
-import store from './store'
-import VueLazyload from 'vue-lazyload'
 
-import 'common/stylus/index.styl'
+import '../flexible'
+import 'common/css/reset.css'
+import 'common/css/base.css'
+
+import FastClick from 'fastclick'
+import VueLazyload from 'vue-lazyload'
 
 Vue.config.productionTip = false
 
 FastClick.attach(document.body)
+
 Vue.use(VueLazyload, {
   loading: require('common/image/default.png')
 })
@@ -19,6 +22,5 @@ Vue.use(VueLazyload, {
 new Vue({
   el: '#app',
   router,
-  store,
   render: h => h(App)
 })

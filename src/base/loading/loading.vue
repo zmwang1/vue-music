@@ -14,14 +14,14 @@ export default {
   }
 }
 </script>
-<style scoped lang="stylus" rel="stylesheet/stylus">
-  @import "~common/stylus/variable"
-
-  .loading
-    width: 100%
-    text-align: center
-    .desc
-      line-height: 20px
-      font-size: $font-size-small
-      color: $color-text-l
+<style scoped>
+.loading {
+  width: 100;
+  text-align: center;
+}
+.loading .desc {
+  line-height: .4rem;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
 </style>

@@ -1,50 +1,40 @@
 <template>
-  <div class="singer" ref="singer">
-    <list-view :data="singers" @select="selectSinger" ref="list"></list-view>
-    <router-view></router-view>
+  <div class="singer">
+    <list-view :data="singers"></list-view>
   </div>
 </template>
 <script>
 import { getSingerList } from 'api/singer'
 import { ERR_OK } from 'api/config'
+
 import Singer from 'common/js/singer'
 import ListView from 'base/listview/listview'
-import { mapMutations } from 'vuex'
-import { playlistMixin } from 'common/js/mixin'
 
 const HOT_NAME = '热门'
 const HOT_SINGER_LEN = 10
+
 export default {
-  data() {
+  data () {
     return {
       singers: []
     }
   },
-  mixins: [playlistMixin],
-  created() {
+  mounted () {
     this._getSingerList()
   },
   components: {
     ListView
   },
   methods: {
-    handlePlaylist(playList) {
-      const bottom = playList.length > 0 ? '60px' : ''
-      this.$refs.singer.style.bottom = bottom
-      this.$refs.list.refresh()
-    },
-    selectSinger(singer) {
-      this.$router.push({path: `/singer/${singer.id}`})
-      this.setSinger(singer)
-    },
-    _getSingerList() {
+    _getSingerList () {
       getSingerList().then((res) => {
         if (res.code === ERR_OK) {
           this.singers = this._normalizeSinger(res.data.list)
+          console.log(this.singers)
         }
       })
     },
-    _normalizeSinger(list) {
+    _normalizeSinger (list) {
       let map = {
         hot: {
           title: HOT_NAME,
@@ -55,23 +45,26 @@ export default {
         if (index < HOT_SINGER_LEN) {
           map.hot.items.push(new Singer({
             id: item.Fsinger_mid,
-            name: item.Fother_name
+            name: item.Fsinger_name
           }))
         }
-        const key = item.Findex
+        let key = item.Findex
+
         if (!map[key]) {
           map[key] = {
             title: key,
             items: []
           }
         }
+
         map[key].items.push(new Singer({
           id: item.Fsinger_mid,
-          name: item.Fother_name
+          name: item.Fsinger_name
         }))
       })
-      let hot = []
+
       let ret = []
+      let hot = []
       for (let key in map) {
         let val = map[key]
         if (val.title.match(/[a-zA-Z]/)) {
@@ -84,17 +77,15 @@ export default {
         return a.title.charCodeAt(0) - b.title.charCodeAt(0)
       })
       return hot.concat(ret)
-    },
-    ...mapMutations({
-      setSinger: 'SET_SINGER'
-    })
+    }
   }
 }
 </script>
-<style scoped lang="stylus" rel="stylesheet/stylus">
-  .singer
-    position: fixed
-    top: 88px
-    bottom: 0
-    width: 100%
+<style scoped>
+.singer {
+  position: fixed;
+  top: 1.76rem;
+  bottom: 0;
+  width: 100%;
+}
 </style>

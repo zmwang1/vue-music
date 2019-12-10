@@ -1,10 +1,10 @@
 <template>
-  <scroll class="listview" :data="data" ref="listview" @scroll="scroll" :listen-scroll="listenScroll" :probe-type="probeType">
+  <scroll class="listview" :data="data" ref="listview" :listenScroll="listenScroll" @scroll="scroll" :probeType="probeType">
     <ul>
-      <li class="list-group" v-for="(group, i) in data" :key="i" ref="listGroup">
+      <li v-for="(group, i) of data" :key="i" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li class="list-group-item" v-for="(item, index) in group.items" :key="index" @click="selectItem(item)">
+          <li v-for="item of group.items" :key="item.id" class="list-group-item">
             <img class="avatar" v-lazy="item.avatar">
             <span class="name">{{item.name}}</span>
           </li>
@@ -13,212 +13,160 @@
     </ul>
     <div class="list-shortcut" @touchstart.stop.prevent="onShortcutTouchStart" @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
-        <li class="item" :class="{current: currentIndex === i}" v-for="(item, i) of shortcutList" :key="i" :data-index="i">{{item}}</li>
+        <li class="item" :class="{'current': currentIndex === index}" v-for="(item, index) of shortcutList" :key="index" :data-index="index">{{item}}</li>
       </ul>
-    </div>
-    <div class="list-fixed" v-show="fixedTitle" ref="fixed">
-      <div class="fixed-title">{{fixedTitle}}</div>
-    </div>
-    <div v-show="!data.length" class="loading-container">
-      <loading></loading>
     </div>
   </scroll>
 </template>
 <script>
 import Scroll from 'base/scroll/scroll'
 import { getData } from 'common/js/dom'
-import Loading from 'base/loading/loading'
 
 const ANCHOR_HEIGHT = 18
-const TITLE_HEIGHT = 30
+
 export default {
-  data() {
+  data () {
     return {
+      listenScroll: true,
+      probeType: 3,
       scrollY: -1,
       currentIndex: 0,
-      diff: -1
+      listHeight: []
     }
   },
-  created() {
+  created () {
     this.touch = {}
-    this.listHeight = []
-    this.listenScroll = true
-    this.probeType = 3
   },
   props: {
     data: {
       type: Array,
-      default: function() {
+      default: () => {
         return []
       }
     }
   },
-  components: {
-    Scroll,
-    Loading
-  },
   computed: {
-    shortcutList() {
+    shortcutList () {
       return this.data.map((item) => {
-        return item.title.slice(0, 1)
+        return item.title.substr(0, 1)
       })
-    },
-    fixedTitle() {
-      if (this.scrollY > 0) {
-        return ''
-      }
-      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
     }
   },
   watch: {
-    data() {
+    data () {
       setTimeout(() => {
         this._calculateHeight()
       }, 20)
     },
-    scrollY(newVal) {
-      // 滑动到顶部
-      if (newVal > 0) {
+    scrollY (newY) {
+      if (newY > 0) {
         this.currentIndex = 0
         return
       }
-      // 滑动到中间部分
-      let listHeight = this.listHeight
-      for (let i = 0; i < listHeight.length - 1; i++) {
-        let height1 = listHeight[i]
-        let height2 = listHeight[i + 1]
-        if (-newVal >= height1 && -newVal < height2) {
+      let list = this.listHeight
+      for (let i = 0, iLen = list.length; i < iLen; i++) {
+        let height1 = list[i]
+        let height2 = list[i + 1]
+        if (!height2 || (-newY > height1 && -newY < height2)) {
           this.currentIndex = i
-          this.diff = height2 + newVal
           return
         }
       }
-      // 滑动到底部，且-newY大于最后一个元素的上限
-      this.currentIndex = listHeight.length - 2
-    },
-    diff(newVal) {
-      let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
-      if (this.fixedTop === fixedTop) {
-        return
-      }
-      this.fixedTop = fixedTop
-      this.$refs.fixed.style.transform = `translate3d(0,${fixedTop}px,0)`
+      this.currentIndex = 0
     }
   },
+  components: {
+    Scroll
+  },
   methods: {
-    selectItem(item) {
-      this.$emit('select', item)
-    },
-    onShortcutTouchStart(e) {
+    onShortcutTouchStart (e) {
       let anchorIndex = getData(e.target, 'index')
       let firstTouch = e.touches[0]
       this.touch.y1 = firstTouch.pageY
       this.touch.anchorIndex = anchorIndex
       this._scrollTo(anchorIndex)
     },
-    onShortcutTouchMove(e) {
+    onShortcutTouchMove (e) {
       let firstTouch = e.touches[0]
       this.touch.y2 = firstTouch.pageY
       let delta = (this.touch.y2 - this.touch.y1) / ANCHOR_HEIGHT | 0
       let anchorIndex = parseInt(this.touch.anchorIndex) + delta
       this._scrollTo(anchorIndex)
     },
-    scroll(pos) {
+    scroll (pos) {
       this.scrollY = pos.y
     },
-    refresh() {
-      this.$refs.listview.refresh()
+    _scrollTo (index) {
+      this.$refs['listview'].scrollToElement(this.$refs.listGroup[index], 0)
     },
-    _calculateHeight() {
+    _calculateHeight () {
       this.listHeight = []
-      const list = this.$refs.listGroup
+      let list = this.$refs.listGroup
       let height = 0
+      console.log(list)
       this.listHeight.push(height)
-      for (let i = 0; i < list.length; i++) {
+      for (let i = 0, iLen = list.length; i < iLen; i++) {
         let item = list[i]
         height += item.clientHeight
         this.listHeight.push(height)
       }
-    },
-    _scrollTo(index) {
-      if (!index && index !== 0) {
-        return
-      }
-      if (index < 0) {
-        index = 0
-      } else if (index > this.listHeight.length - 2) {
-        index = this.listHeight.length
-      }
-      this.scrollY = -this.listHeight[index]
-      this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
     }
   }
 }
 </script>
-<style scoped lang="stylus" rel="stylesheet/stylus">
-  @import "~common/stylus/variable"
-
-  .listview
-    position: relative
-    width: 100%
-    height: 100%
-    overflow: hidden
-    background: $color-background
-    .list-group
-      padding-bottom: 30px
-      .list-group-title
-        height: 30px
-        line-height: 30px
-        padding-left: 20px
-        font-size: $font-size-small
-        color: $color-text-l
-        background: $color-highlight-background
-      .list-group-item
-        display: flex
-        align-items: center
-        padding: 20px 0 0 30px
-        .avatar
-          width: 50px
-          height: 50px
-          border-radius: 50%
-        .name
-          margin-left: 20px
-          color: $color-text-l
-          font-size: $font-size-medium
-    .list-shortcut
-      position: absolute
-      z-index: 30
-      right: 0
-      top: 50%
-      transform: translateY(-50%)
-      width: 20px
-      padding: 20px 0
-      border-radius: 10px
-      text-align: center
-      background: $color-background-d
-      font-family: Helvetica
-      .item
-        padding: 3px
-        line-height: 1
-        color: $color-text-l
-        font-size: $font-size-small
-        &.current
-          color: $color-theme
-    .list-fixed
-      position: absolute
-      top: 0
-      left: 0
-      width: 100%
-      .fixed-title
-        height: 30px
-        line-height: 30px
-        padding-left: 20px
-        font-size: $font-size-small
-        color: $color-text-l
-        background: $color-highlight-background
-    .loading-container
-      position: absolute
-      width: 100%
-      top: 50%
-      transform: translateY(-50%)
+<style scoped>
+.listview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #222;
+}
+.list-group {
+  padding-bottom: .6rem;
+}
+.list-group-title {
+  height: .6rem;
+  line-height: .6rem;
+  padding-left: .4rem;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  background: #333;
+}
+.list-group-item {
+  display: flex;
+  align-items: center;
+  padding: .4rem 0 0 .6rem;
+}
+.avatar {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+}
+.name {
+  margin-left: .4rem;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.list-shortcut {
+  width: .4rem;
+  padding: .4rem 0;
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 30;
+  border-radius: .2rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+.list-shortcut .item {
+  line-height: 1;
+  font-size: 12px;
+  padding: .06rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.item.current {
+  color: #ffcd32;
+}
 </style>

@@ -1,9 +1,9 @@
-import originJsonp from 'jsonp'
+import originJSONP from 'jsonp'
 
-export default function jsonp(url, data, option) {
+export default function jsonp (url, data, options) {
   url += (url.indexOf('?') < 0 ? '?' : '&') + param(data)
   return new Promise((resolve, reject) => {
-    originJsonp(url, option, (err, data) => {
+    originJSONP(url, options, (err, data) => {
       if (!err) {
         resolve(data)
       } else {
@@ -13,11 +13,12 @@ export default function jsonp(url, data, option) {
   })
 }
 
-function param(data) {
+function param (data) {
   let url = ''
-  for (var item in data) {
-    let value = data[item] !== undefined ? data[item] : ''
-    url += `&${item}=${encodeURIComponent(value)}`
+  for (let i in data) {
+    let value = data[i] !== undefined ? data[i] : ''
+    url += `&${i}=${encodeURIComponent(value)}`
   }
-  return url ? url.substring(1) : ''
+  url = url.substring(1)
+  return url
 }

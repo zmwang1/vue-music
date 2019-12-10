@@ -1,44 +1,44 @@
 <template>
   <div class="m-header">
     <div class="icon"></div>
-    <h1 class="text">Chicken Music</h1>
+    <h1 class="title">Chicken Music</h1>
+    <div class="people"><i class="icon-mine"></i></div>
   </div>
 </template>
 <script>
-export default {
-}
+export default {}
 </script>
-<style scoped lang="stylus">
-  @import "~common/stylus/variable"
-  @import "~common/stylus/mixin"
-
-  .m-header
-    position: relative
-    height: 44px
-    text-align: center
-    color: $color-theme
-    font-size: 0
-    .icon
-      display: inline-block
-      vertical-align: top
-      margin-top: 6px
-      width: 30px
-      height: 32px
-      margin-right: 9px
-      bg-image('logo')
-      background-size: 30px 32px
-    .text
-      display: inline-block
-      vertical-align: top
-      line-height: 44px
-      font-size: $font-size-large
-    .mine
-      position: absolute
-      top: 0
-      right: 0
-      .icon-mine
-        display: block
-        padding: 12px
-        font-size: 20px
-        color: $color-theme
+<style scoped>
+  .m-header {
+    width: 100%;
+    height: .88rem;
+    color: #ffcd32;
+    position: relative;
+    background: #222;
+    text-align: center;
+  }
+  .icon {
+    width: .6rem;
+    height: .64rem;
+    background-image: url('../../common/image/logo.png');
+    background-size: 100% 100%;
+    display: inline-block;
+    margin-top: .12rem;
+  }
+  .title {
+    height: .88rem;
+    line-height: .88rem;
+    font-size: 18px;
+    display: inline-block;
+    vertical-align: top;
+  }
+  .people {
+    width: .4rem;
+    position: absolute;
+    top: .26rem;
+    right: .12rem;
+  }
+  .people i {
+    font-size: 20px;
+  }
 </style>
