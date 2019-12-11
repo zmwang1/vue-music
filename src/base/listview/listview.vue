@@ -4,7 +4,7 @@
       <li v-for="(group, i) of data" :key="i" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li v-for="item of group.items" :key="item.id" class="list-group-item">
+          <li @click="selectItem(item)" v-for="item of group.items" :key="item.id" class="list-group-item">
             <img class="avatar" v-lazy="item.avatar">
             <span class="name">{{item.name}}</span>
           </li>
@@ -16,6 +16,9 @@
         <li class="item" :class="{'current': currentIndex === index}" v-for="(item, index) of shortcutList" :key="index" :data-index="index">{{item}}</li>
       </ul>
     </div>
+    <div class="list-fixed" v-show="fixedTitle" ref="fixed">
+      <div class="fixed-title">{{fixedTitle}}</div>
+    </div>
   </scroll>
 </template>
 <script>
@@ -23,6 +26,7 @@ import Scroll from 'base/scroll/scroll'
 import { getData } from 'common/js/dom'
 
 const ANCHOR_HEIGHT = 18
+const TITLE_HEIGHT = 30
 
 export default {
   data () {
@@ -31,7 +35,8 @@ export default {
       probeType: 3,
       scrollY: -1,
       currentIndex: 0,
-      listHeight: []
+      listHeight: [],
+      diff: -1
     }
   },
   created () {
@@ -50,6 +55,12 @@ export default {
       return this.data.map((item) => {
         return item.title.substr(0, 1)
       })
+    },
+    fixedTitle () {
+      if (this.scrollY > 0) {
+        return ''
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
     }
   },
   watch: {
@@ -64,21 +75,33 @@ export default {
         return
       }
       let list = this.listHeight
-      for (let i = 0, iLen = list.length; i < iLen; i++) {
+      for (let i = 0, iLen = list.length - 1; i < iLen; i++) {
         let height1 = list[i]
         let height2 = list[i + 1]
-        if (!height2 || (-newY > height1 && -newY < height2)) {
+        if (-newY >= height1 && -newY < height2) {
           this.currentIndex = i
+          this.diff = height2 + newY
           return
         }
       }
-      this.currentIndex = 0
+      this.currentIndex = list.length - 2
+    },
+    diff (newVal) {
+      let fixedTop = newVal < TITLE_HEIGHT ? newVal - TITLE_HEIGHT : 0
+      if (this.fixedTop === fixedTop) {
+        return
+      }
+      this.fixedTop = fixedTop
+      this.$refs.fixed.style.transform = `translate3d(0, ${fixedTop}px, 0)`
     }
   },
   components: {
     Scroll
   },
   methods: {
+    selectItem (item) {
+      this.$emit('select', item)
+    },
     onShortcutTouchStart (e) {
       let anchorIndex = getData(e.target, 'index')
       let firstTouch = e.touches[0]
@@ -97,13 +120,21 @@ export default {
       this.scrollY = pos.y
     },
     _scrollTo (index) {
+      if (!index && index !== 0) {
+        return
+      }
+      if (index < 0) {
+        index = 0
+      } else if (index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2
+      }
       this.$refs['listview'].scrollToElement(this.$refs.listGroup[index], 0)
+      this.scrollY = this.$refs.listview.scroll.y
     },
     _calculateHeight () {
       this.listHeight = []
       let list = this.$refs.listGroup
       let height = 0
-      console.log(list)
       this.listHeight.push(height)
       for (let i = 0, iLen = list.length; i < iLen; i++) {
         let item = list[i]
@@ -168,5 +199,19 @@ export default {
 }
 .item.current {
   color: #ffcd32;
+}
+.list-fixed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+.list-fixed .fixed-title {
+  height: .6rem;
+  line-height: .6rem;
+  padding-left: .4rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  background: #333;
 }
 </style>
