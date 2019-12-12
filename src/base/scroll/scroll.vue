@@ -27,9 +27,12 @@ export default {
     }
   },
   mounted () {
-    setTimeout(() => {
+    // setTimeout(() => {
+    //   this._initScroll()
+    // }, 20)
+    this.$nextTick(() => {
       this._initScroll()
-    }, 20)
+    })
   },
   watch: {
     data () {
